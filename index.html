@@ -3,236 +3,394 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ぽけっとるな — ドットにゃんこ</title>
+<title>ぽけっとネコ — おはなしアプリ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --ink:#3a2a20;
-    --crt-bg:#3d2b22;
-    --crt-frame:#f3e3d3;
-    --screen:#fdf6ec;
-    --accent:#e88ea0;
-    --accent-deep:#c96b81;
-    --line:#5a4536;
+  :root {
+    --ink: #3a2a20;
+    --crt-bg: #3d2b22;
+    --crt-frame: #f3e3d3;
+    --screen: #e2e8ce; /* 少しグリーンがかったレトロ液晶風 */
+    --accent: #e88ea0;
+    --accent-deep: #c96b81;
+    --line: #5a4536;
   }
-  *{box-sizing:border-box;}
-  html,body{margin:0;height:100%;}
-  body{
-    background:radial-gradient(ellipse at 50% 0%, #4a352a 0%, #241a14 70%);
-    font-family:'Zen Maru Gothic', sans-serif;
-    color:var(--ink);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    min-height:100vh;
-    padding:16px;
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: radial-gradient(ellipse at 50% 0%, #4a352a 0%, #241a14 70%);
+    font-family: 'Zen Maru Gothic', sans-serif;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 16px;
   }
-  .console{
-    width:100%;
-    max-width:460px;
-    background:var(--crt-frame);
-    border-radius:22px;
-    padding:16px;
-    box-shadow:0 20px 50px rgba(0,0,0,.5), inset 0 0 0 2px #d8c3a5;
+  .console {
+    width: 100%;
+    max-width: 460px;
+    background: var(--crt-frame);
+    border-radius: 22px;
+    padding: 16px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.5), inset 0 0 0 2px #d8c3a5;
   }
-  .console-top{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:2px 8px 10px;
+  .console-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 8px 10px;
   }
-  .console-top .brand{
-    font-family:'DotGothic16', monospace;
-    font-size:11px;
-    letter-spacing:1px;
-    color:#8a6a4a;
+  .console-top .brand {
+    font-family: 'DotGothic16', monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: #8a6a4a;
   }
-  .console-top .day-pill{
-    font-family:'DotGothic16', monospace;
-    font-size:11px;
-    background:var(--accent-deep);
-    color:#fff6f2;
-    padding:4px 10px;
-    border-radius:20px;
+  .console-top .day-pill {
+    font-family: 'DotGothic16', monospace;
+    font-size: 12px;
+    background: #6ba883;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 20px;
   }
-  .screen-wrap{
-    position:relative;
-    background:var(--crt-bg);
-    border-radius:10px;
-    padding:10px;
-    box-shadow:inset 0 0 0 3px #1c130d, inset 0 8px 24px rgba(0,0,0,.5);
+  .screen-wrap {
+    position: relative;
+    background: var(--crt-bg);
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: inset 0 0 0 3px #1c130d, inset 0 8px 24px rgba(0,0,0,.5);
   }
-  .screen{
-    position:relative;
-    background:var(--screen);
-    border-radius:6px;
-    overflow:hidden;
-    display:flex;
-    flex-direction:column;
+  .screen {
+    position: relative;
+    background: var(--screen);
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
-  .scanlines{
-    position:absolute; inset:0;
-    background:repeating-linear-gradient(
+  .scanlines {
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
       to bottom,
       rgba(61,43,34,0.04) 0px,
       rgba(61,43,34,0.04) 1px,
       transparent 2px,
       transparent 3px
     );
-    pointer-events:none;
-    z-index:2;
+    pointer-events: none;
+    z-index: 10;
   }
-  .stage{
-    position:relative;
-    height:160px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:radial-gradient(circle at 50% 40%, #fbeadd 0%, #f3d8dd 70%, #eecdd6 100%);
-    overflow:hidden;
+  .stage {
+    position: relative;
+    height: 170px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    background: linear-gradient(to bottom, #d6e0c0 0%, #b8c99d 100%);
+    overflow: hidden;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #9aa882;
   }
-  .dot-cat-wrap{
-    position:relative;
-    width:100px; height:100px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    transform:scale(1.5); /* ドット絵を拡大 */
-    image-rendering:pixelated; /* ドットをくっきりさせる */
-    animation:bob 3s ease-in-out infinite;
-  }
-  @keyframes bob{
-    0%,100%{ transform:translateY(0) scale(1.5); }
-    50%{ transform:translateY(-4px) scale(1.5); }
-  }
-  /* ドット絵（CSSで描画） */
-  .cat-body{ position:absolute; width:32px; height:24px; background:#aaa; border-radius:12px 12px 6px 6px; top:48px; }
-  .cat-ear{ position:absolute; width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-bottom:12px solid #aaa; top:-10px; }
-  .cat-ear.left{ left:2px; transform:rotate(-15deg); }
-  .cat-ear.right{ right:2px; transform:rotate(15deg); }
-  .cat-face{ position:absolute; width:24px; height:16px; background:#ccc; border-radius:8px; top:4px; left:4px; z-index:1; }
-  .cat-eye{ position:absolute; width:3px; height:3px; background:#222; border-radius:50%; top:5px; z-index:2; transition:background .2s; }
-  .cat-eye.left{ left:6px; }
-  .cat-eye.right{ right:6px; }
-  .cat-mouse{ position:absolute; width:6px; height:3px; background:#222; border-radius:0 0 3px 3px; top:10px; left:9px; z-index:2; transition:all .2s; }
-  .cat-tail{ position:absolute; width:8px; height:16px; background:#aaa; border-radius:0 8px 8px 0; right:-6px; top:40px; z-index:0; transform:rotate(20deg); }
 
-  /* 表情の切り替え設定（クラスで制御） */
-  /* 通常 (idle) */
-  .dot-cat-wrap.idle .cat-body, .dot-cat-wrap.idle .cat-ear, .dot-cat-wrap.idle .cat-tail{ background:#aaa; }
-  .dot-cat-wrap.idle .cat-face{ background:#ccc; }
+  /* 白ネコのCSS描画（バラバラにならないように結合） */
+  .toro-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: scale(1.4);
+    transform-origin: bottom center;
+    animation: bob 3s ease-in-out infinite;
+    z-index: 5;
+  }
+  
+  @keyframes bob {
+    0%, 100% { transform: translateY(0) scale(1.4); }
+    50% { transform: translateY(-3px) scale(1.4); }
+  }
 
-  /* おしゃべり (talk) - 耳がピンクに、目が細まる */
-  .dot-cat-wrap.talk .cat-ear{ border-bottom-color:#eacdd6; }
-  .dot-cat-wrap.talk .cat-face{ background:#eecdd6; }
-  .dot-cat-wrap.talk .cat-eye{ height:1px; background:#555; }
-  .dot-cat-wrap.talk .cat-mouse{ border-radius:3px; height:2px; top:11px; }
+  /* 頭のパーツ */
+  .toro-head {
+    position: relative;
+    width: 60px; 
+    height: 44px;
+    background: #fff;
+    border: 2px solid #444;
+    border-radius: 10px 10px 18px 18px;
+    z-index: 3;
+    display: flex;
+    justify-content: center;
+  }
+  .toro-ear {
+    position: absolute;
+    width: 16px; 
+    height: 18px;
+    background: #fff;
+    border: 2px solid #444;
+    border-bottom: none;
+    top: -12px;
+    z-index: -1;
+  }
+  .toro-ear.left {
+    left: 2px;
+    border-radius: 4px 12px 0 0;
+    transform: rotate(-15deg);
+  }
+  .toro-ear.right {
+    right: 2px;
+    border-radius: 12px 4px 0 0;
+    transform: rotate(15deg);
+  }
+  .toro-eye {
+    position: absolute;
+    width: 5px; 
+    height: 5px;
+    background: #222;
+    border-radius: 50%;
+    top: 18px;
+    transition: all 0.2s;
+  }
+  .toro-eye.left { left: 12px; }
+  .toro-eye.right { right: 12px; }
+  
+  .toro-blush {
+    position: absolute;
+    width: 10px; height: 6px;
+    background: #ffa8b8;
+    border-radius: 50%;
+    top: 24px;
+    opacity: 0.6;
+    transition: all 0.2s;
+  }
+  .toro-blush.left { left: 4px; }
+  .toro-blush.right { right: 4px; }
 
-  /* うれしい (happy) - 体がピンクに、目がキラキラ */
-  .dot-cat-wrap.happy .cat-body, .dot-cat-wrap.happy .cat-ear, .dot-cat-wrap.happy .cat-tail{ background:#e88ea0; }
-  .dot-cat-wrap.happy .cat-face{ background:#f3d8dd; }
-  .dot-cat-wrap.happy .cat-eye{ background:#c96b81; }
-  .dot-cat-wrap.happy .cat-mouse{ border-radius:3px; height:2px; top:11px; background:#c96b81;}
+  .toro-mouth {
+    position: absolute;
+    width: 14px; 
+    height: 6px;
+    border: 2px solid #222;
+    border-top: 1px solid #222;
+    border-radius: 2px 2px 10px 10px;
+    background: #fff;
+    top: 24px;
+    transition: all 0.2s;
+  }
+
+  /* 体のパーツ（しっかり隙間なく繋げる） */
+  .toro-body-container {
+    position: relative;
+    width: 24px;
+    display: flex;
+    justify-content: center;
+    margin-top: -4px; /* 頭と体を密着させる */
+    z-index: 2;
+  }
+  .toro-torso {
+    width: 20px; 
+    height: 30px;
+    background: #fff;
+    border: 2px solid #444;
+    border-radius: 8px;
+    z-index: 2;
+  }
+  .toro-arm {
+    position: absolute;
+    width: 8px; 
+    height: 22px;
+    background: #fff;
+    border: 2px solid #444;
+    border-radius: 4px;
+    top: 4px;
+    z-index: 3;
+    transition: transform 0.3s;
+  }
+  .toro-arm.left { 
+    left: -4px; 
+    transform: rotate(20deg); 
+    transform-origin: top center; 
+  }
+  .toro-arm.right { 
+    right: -4px; 
+    transform: rotate(-20deg); 
+    transform-origin: top center; 
+  }
+
+  .toro-leg {
+    position: absolute;
+    width: 8px; 
+    height: 18px;
+    background: #fff;
+    border: 2px solid #444;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    bottom: -16px;
+    z-index: 1;
+  }
+  .toro-leg.left { left: 2px; }
+  .toro-leg.right { right: 2px; }
+
+  .toro-tail {
+    position: absolute;
+    width: 26px; 
+    height: 6px;
+    background: #fff;
+    border: 2px solid #444;
+    border-radius: 3px;
+    bottom: 6px;
+    right: -16px;
+    transform: rotate(-30deg);
+    z-index: 0;
+  }
+
+  /* ==================================
+     表情・ポーズのアニメーション設定
+  ================================== */
+  
+  /* しゃべる (talk) - 口がパクパク */
+  .toro-wrap.talk .toro-mouth {
+    height: 10px;
+    background: #f4b8c3;
+    border-radius: 4px 4px 12px 12px;
+    animation: talk-mouth 0.3s infinite alternate;
+  }
+  @keyframes talk-mouth {
+    0% { height: 4px; }
+    100% { height: 10px; }
+  }
+
+  /* うれしい (happy) - 目が ^ ^ になり、バンザイする */
+  .toro-wrap.happy .toro-eye {
+    background: transparent;
+    border: 2px solid #222;
+    border-bottom: none;
+    border-radius: 5px 5px 0 0;
+    width: 8px; 
+    height: 4px;
+    top: 18px;
+  }
+  .toro-wrap.happy .toro-eye.left { left: 10px; }
+  .toro-wrap.happy .toro-eye.right { right: 10px; }
+  .toro-wrap.happy .toro-blush {
+    opacity: 1;
+    background: #ff7b95;
+  }
+  .toro-wrap.happy .toro-mouth {
+    height: 12px;
+    background: #f4b8c3;
+    border-radius: 4px 4px 14px 14px;
+  }
+  .toro-wrap.happy .toro-arm.left {
+    transform: rotate(140deg); /* バンザイ */
+  }
+  .toro-wrap.happy .toro-arm.right {
+    transform: rotate(-140deg); /* バンザイ */
+  }
+  .toro-wrap.happy {
+    animation: jump 0.4s ease-in-out infinite alternate;
+  }
+  @keyframes jump {
+    0% { transform: translateY(0) scale(1.4); }
+    100% { transform: translateY(-10px) scale(1.4); }
+  }
 
 
-  .zzz{
-    position:absolute; top:8px; right:25%;
-    font-family:'DotGothic16', monospace;
-    font-size:13px; color:#8a6a4a; opacity:0;
-    z-index:3;
+  /* ログ（会話履歴）エリア */
+  .log {
+    position: relative;
+    z-index: 5;
+    height: 110px;
+    overflow-y: auto;
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.6;
+    background: rgba(255, 255, 255, 0.6);
   }
-  .zzz.show{ opacity:1; }
-  .log{
-    position:relative;
-    z-index:3;
-    height:105px;
-    overflow-y:auto;
-    padding:10px 12px;
-    font-size:13px;
-    line-height:1.5;
-    border-top:2px dashed #eccdd6;
-    background:var(--screen);
+  .log::-webkit-scrollbar { width: 6px; }
+  .log::-webkit-scrollbar-thumb { background: #b8c99d; border-radius: 4px; }
+  .log p { margin: 0 0 6px; }
+  .log .pote-line { color: #2c4c3b; font-weight: 700; }
+  .log .pote-line::before { content: "ネコ： "; }
+  .log .sys-line { color: #666; font-size: 11.5px; }
+
+  /* コントローラー */
+  .controls {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
-  .log::-webkit-scrollbar{ width:6px; }
-  .log::-webkit-scrollbar-thumb{ background:#e0bcc4; border-radius:4px; }
-  .log p{ margin:0 0 6px; }
-  .log .pote-line{ color:var(--accent-deep); font-weight:700; }
-  .log .pote-line::before{ content:"ねこ： "; }
-  .log .sys-line{ color:#9a8a78; font-size:11.5px; }
-  .controls{
-    margin-top:12px;
-    display:flex;
-    flex-direction:column;
-    gap:8px;
+  .row { display: flex; gap: 6px; }
+  input[type=text], select {
+    flex: 1;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 13.5px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 2px solid var(--line);
+    background: #fffaf3;
+    color: var(--ink);
+    min-width: 0;
   }
-  .row{ display:flex; gap:6px; }
-  input[type=text], select{
-    flex:1;
-    font-family:'Zen Maru Gothic', sans-serif;
-    font-size:13.5px;
-    padding:8px 10px;
-    border-radius:8px;
-    border:2px solid var(--line);
-    background:#fffaf3;
-    color:var(--ink);
-    min-width:0;
+  select { flex: 0 0 90px; }
+  button {
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    color: #fff;
+    background: #6ba883;
+    transition: transform .1s ease;
+    white-space: nowrap;
   }
-  select{ flex:0 0 90px; }
-  button{
-    font-family:'Zen Maru Gothic', sans-serif;
-    font-weight:700;
-    font-size:13px;
-    padding:8px 12px;
-    border-radius:8px;
-    border:none;
-    cursor:pointer;
-    color:#fff;
-    background:var(--accent);
-    transition:transform .1s ease;
-    white-space:nowrap;
+  button:active { transform: scale(.96); }
+  button.secondary { background: #b78a5e; }
+  button.ghost {
+    background: transparent;
+    color: #7a5c3e;
+    border: 2px solid #7a5c3e;
+    font-size: 11px;
+    padding: 5px 8px;
   }
-  button:active{ transform:scale(.96); }
-  button.secondary{ background:#b78a5e; }
-  button.ghost{
-    background:transparent;
-    color:#7a5c3e;
-    border:2px solid #7a5c3e;
-    font-size:11px;
-    padding:5px 8px;
+  .bottom-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    gap: 6px;
   }
-  .bottom-row{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-top:10px;
-    gap:6px;
+  .vocab-count {
+    font-family: 'DotGothic16', monospace;
+    font-size: 11px;
+    color: #7a5c3e;
   }
-  .vocab-count{
-    font-family:'DotGothic16', monospace;
-    font-size:11px;
-    color:#7a5c3e;
+  .save-row { display: flex; gap: 4px; }
+  #fileInput { display: none; }
+  .toast {
+    position: fixed; bottom: 20px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink); color: #fff6f2;
+    padding: 6px 14px; border-radius: 20px;
+    font-size: 12px;
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s ease;
+    z-index: 99;
   }
-  .save-row{ display:flex; gap:4px; }
-  #fileInput{ display:none; }
-  .toast{
-    position:fixed; bottom:20px; left:50%;
-    transform:translateX(-50%);
-    background:var(--ink); color:#fff6f2;
-    padding:6px 14px; border-radius:20px;
-    font-size:12px;
-    opacity:0; pointer-events:none;
-    transition:opacity .2s ease;
-    z-index:99;
-  }
-  .toast.show{ opacity:1; }
+  .toast.show { opacity: 1; }
 </style>
 </head>
 <body>
 
 <div class="console">
   <div class="console-top">
-    <div class="brand">POCKET CAT — ドットにゃんこ試作</div>
+    <div class="brand">POCKET CAT — おはなしアプリ</div>
     <div class="day-pill" id="dayPill">1日目</div>
   </div>
 
@@ -240,19 +398,28 @@
     <div class="screen">
       <div class="scanlines"></div>
       <div class="stage">
-        <div class="zzz" id="zzz">Zzz</div>
-        <div class="dot-cat-wrap idle" id="catWrap">
-          <!-- ドットにゃんこ（CSSで描画） -->
-          <div class="cat-ear left"></div>
-          <div class="cat-ear right"></div>
-          <div class="cat-tail"></div>
-          <div class="cat-body"></div>
-          <div class="cat-face">
-            <div class="cat-eye left"></div>
-            <div class="cat-eye right"></div>
-            <div class="cat-mouse"></div>
+        
+        <!-- 白ネコのCSS描画 -->
+        <div class="toro-wrap idle" id="catWrap">
+          <div class="toro-head">
+            <div class="toro-ear left"></div>
+            <div class="toro-ear right"></div>
+            <div class="toro-eye left"></div>
+            <div class="toro-eye right"></div>
+            <div class="toro-blush left"></div>
+            <div class="toro-blush right"></div>
+            <div class="toro-mouth"></div>
+          </div>
+          <div class="toro-body-container">
+            <div class="toro-arm left"></div>
+            <div class="toro-torso"></div>
+            <div class="toro-arm right"></div>
+            <div class="toro-leg left"></div>
+            <div class="toro-leg right"></div>
+            <div class="toro-tail"></div>
           </div>
         </div>
+
       </div>
       <div class="log" id="log"></div>
     </div>
@@ -260,7 +427,7 @@
 
   <div class="controls">
     <div class="row">
-      <input type="text" id="talkInput" placeholder="にゃんこに話しかける…" maxlength="20">
+      <input type="text" id="talkInput" placeholder="ネコに話しかける…" maxlength="20">
       <button id="talkBtn">はなす</button>
     </div>
     <div class="row">
@@ -272,7 +439,7 @@
         <option value="place">ばしょ</option>
         <option value="verb">どうし</option>
       </select>
-      <input type="text" id="wordInput" placeholder="おしえることば" maxlength="12">
+      <input type="text" id="wordInput" placeholder="教えることば" maxlength="12">
       <button id="teachBtn" class="secondary">おしえる</button>
     </div>
   </div>
@@ -292,19 +459,19 @@
 <script>
 (function(){
   const TEMPLATES = {
-    greeting: ["{w}にゃ！げんき？", "きょうも{w}のきぶんだにゃ", "{w}ってするとなんだかうれしいにゃ"],
-    food: ["{w}たべたいにゃあ…", "きょうのごはんは{w}がいいにゃ", "{w}のにおい、するきがするにゃ"],
-    name: ["{w}ってよぶとふりむいちゃうかもにゃ", "{w}、それがわたしのなまえ…？にゃ", "{w}というひびきがすきにゃ"],
-    feeling: ["なんだか{w}きぶんにゃ", "きょうはずっと{w}にゃ", "{w}ってきもち、わかるきがするにゃ"],
-    place: ["{w}にいってみたいにゃ", "{w}のことをかんがえてたにゃ", "きょうは{w}のゆめをみたにゃ"],
-    verb: ["いっしょに{w}するにゃ？", "{w}のれんしゅういちゅうにゃ！", "{w}のあと、ひとやすみにゃ"]
+    greeting: ["{w}ニャ！", "きょうは{w}の気分ニャ", "{w}っていい言葉ニャ"],
+    food: ["{w}たべたいニャあ…", "きょうのごはんは{w}にするニャ", "{w}、おいしいニャよね"],
+    name: ["{w}ってよんでほしいニャ", "{w}さん…？ニャ", "{w}というひびきがすきニャ"],
+    feeling: ["なんだか{w}気分ニャ", "きょうはずっと{w}ニャ", "{w}ってきもち、わかるニャ"],
+    place: ["{w}にいってみたいニャ", "{w}のことをかんがえてたニャ", "きょうは{w}のゆめをみたニャ"],
+    verb: ["いっしょに{w}するニャ？", "{w}のれんしゅう中ニャ！", "{w}のあと、ひとやすみニャ"]
   };
 
   const IDLE_LINES = [
-    "……（なにかかんがえてるにゃ）",
-    "ふしぎなおとがきこえたきがするにゃ",
-    "きょうもげんきにゃ！",
-    "ことば、もっとおしえてほしいにゃ"
+    "……（なにか考えてるニャ）",
+    "言葉、もっと教えてほしいニャ",
+    "きょうも元気ニャ！",
+    "人間ってふしぎニャ〜"
   ];
 
   let state = { day: 1, vocab: [], talkCount: 0 };
@@ -316,7 +483,114 @@
   const catWrap = $('catWrap');
 
   function setFace(type){
-    catWrap.className = `dot-cat-wrap ${type}`;
+    catWrap.className = `toro-wrap ${type}`;
   }
 
-  function toast
+  function toast(msg){
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1600);
+  }
+
+  function appendLog(text, cls){
+    const p = document.createElement('p');
+    if(cls) p.className = cls;
+    p.textContent = text;
+    log.appendChild(p);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function updateHeader(){
+    dayPill.textContent = `${state.day}日目`;
+    vocabCount.textContent = `おぼえたことば：${state.vocab.length}こ`;
+  }
+
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function handleTalk(){
+    const input = $('talkInput');
+    const text = input.value.trim();
+    if(!text) return;
+    appendLog(`あなた： ${text}`);
+    input.value = '';
+    state.talkCount++;
+
+    const matched = state.vocab.find(v => text.includes(v.word));
+    if(matched){
+      const bank = TEMPLATES[matched.category] || TEMPLATES.greeting;
+      appendLog(pick(bank).replace('{w}', matched.word), 'pote-line');
+      setFace('happy');
+    } else if(state.vocab.length > 0 && Math.random() < 0.7){
+      const chosen = pick(state.vocab);
+      const bank = TEMPLATES[chosen.category] || TEMPLATES.greeting;
+      appendLog(pick(bank).replace('{w}', chosen.word), 'pote-line');
+      setFace('talk');
+    } else {
+      appendLog(pick(IDLE_LINES), 'pote-line');
+      setFace('talk');
+    }
+    
+    // アニメーションを数秒で元に戻す
+    setTimeout(() => setFace('idle'), 2500);
+  }
+
+  function handleTeach(){
+    const wordInput = $('wordInput');
+    const word = wordInput.value.trim();
+    const category = $('wordCategory').value;
+    if(!word) return;
+    if(state.vocab.some(v => v.word === word)){
+      toast('それはもう知ってるニャ！');
+      return;
+    }
+    state.vocab.push({word, category});
+    wordInput.value = '';
+    appendLog(`「${word}」を教えた！`, 'sys-line');
+    appendLog(`${word}、おぼえたニャ！`, 'pote-line');
+    updateHeader();
+    setFace('happy');
+    
+    setTimeout(() => setFace('idle'), 2500);
+  }
+
+  $('talkBtn').addEventListener('click', handleTalk);
+  $('talkInput').addEventListener('keydown', (e) => { if(e.key==='Enter') handleTalk(); });
+  $('teachBtn').addEventListener('click', handleTeach);
+  $('wordInput').addEventListener('keydown', (e) => { if(e.key==='Enter') handleTeach(); });
+
+  $('saveBtn').addEventListener('click', ()=>{
+    const blob = new Blob([JSON.stringify(state)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pocket-cat-day${state.day}.json`;
+    a.click();
+    toast('きろくを保存したよ');
+  });
+
+  $('loadBtn').addEventListener('click', () => $('fileInput').click());
+  $('fileInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try{
+        state = JSON.parse(reader.result);
+        log.innerHTML = '';
+        appendLog('きろくをよみこんだニャ', 'sys-line');
+        updateHeader();
+        toast('よみこみ完了！');
+      }catch(err){
+        toast('ファイルが壊れているみたい…');
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  appendLog('ネコ「言葉をたくさん教えてほしいニャ」', 'pote-line');
+  updateHeader();
+})();
+</script>
+</body>
+</html>
