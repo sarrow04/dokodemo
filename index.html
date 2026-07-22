@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ぽけっとるな — ルナとおしゃべり</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#3a2a20;
+    --crt-bg:#3d2b22;
+    --crt-frame:#f3e3d3;
+    --screen:#fdf6ec;
+    --accent:#e88ea0;
+    --accent-deep:#c96b81;
+    --line:#5a4536;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{
+    background:radial-gradient(ellipse at 50% 0%, #4a352a 0%, #241a14 70%);
+    font-family:'Zen Maru Gothic', sans-serif;
+    color:var(--ink);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:16px;
+  }
+  .console{
+    width:100%;
+    max-width:460px;
+    background:var(--crt-frame);
+    border-radius:22px;
+    padding:16px;
+    box-shadow:0 20px 50px rgba(0,0,0,.5), inset 0 0 0 2px #d8c3a5;
+  }
+  .console-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:2px 8px 10px;
+  }
+  .console-top .brand{
+    font-family:'DotGothic16', monospace;
+    font-size:11px;
+    letter-spacing:1px;
+    color:#8a6a4a;
+  }
+  .console-top .day-pill{
+    font-family:'DotGothic16', monospace;
+    font-size:11px;
+    background:var(--accent-deep);
+    color:#fff6f2;
+    padding:4px 10px;
+    border-radius:20px;
+  }
+  .screen-wrap{
+    position:relative;
+    background:var(--crt-bg);
+    border-radius:10px;
+    padding:10px;
+    box-shadow:inset 0 0 0 3px #1c130d, inset 0 8px 24px rgba(0,0,0,.5);
+  }
+  .screen{
+    position:relative;
+    background:var(--screen);
+    border-radius:6px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  .scanlines{
+    position:absolute; inset:0;
+    background:repeating-linear-gradient(
+      to bottom,
+      rgba(61,43,34,0.04) 0px,
+      rgba(61,43,34,0.04) 1px,
+      transparent 2px,
+      transparent 3px
+    );
+    pointer-events:none;
+    z-index:2;
+  }
+  .stage{
+    position:relative;
+    height:160px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:radial-gradient(circle at 50% 40%, #fbeadd 0%, #f3d8dd 70%, #eecdd6 100%);
+    overflow:hidden;
+  }
+  .portrait-wrap{
+    position:relative;
+    width:130px; height:130px;
+    border-radius:50%;
+    overflow:hidden;
+    box-shadow:0 0 0 3px #fff, 0 0 0 5px var(--accent), 0 8px 16px rgba(0,0,0,.2);
+    background:#fbeadd;
+    animation:bob 3s ease-in-out infinite;
+  }
+  @keyframes bob{
+    0%,100%{ transform:translateY(0); }
+    50%{ transform:translateY(-4px); }
+  }
+  .portrait-wrap img{
+    position:absolute;
+    top:50%; left:50%;
+    width:200px;
+    max-width:none;
+    transform:translate(-50%,-50%);
+    opacity:0;
+    transition:opacity .3s ease;
+  }
+  .portrait-wrap img.show{ opacity:1; }
+  .zzz{
+    position:absolute; top:8px; right:30%;
+    font-family:'DotGothic16', monospace;
+    font-size:13px; color:#8a6a4a; opacity:0;
+    z-index:3;
+  }
+  .zzz.show{ opacity:1; }
+  .log{
+    position:relative;
+    z-index:3;
+    height:105px;
+    overflow-y:auto;
+    padding:10px 12px;
+    font-size:13px;
+    line-height:1.5;
+    border-top:2px dashed #eccdd6;
+    background:var(--screen);
+  }
+  .log::-webkit-scrollbar{ width:6px; }
+  .log::-webkit-scrollbar-thumb{ background:#e0bcc4; border-radius:4px; }
+  .log p{ margin:0 0 6px; }
+  .log .pote-line{ color:var(--accent-deep); font-weight:700; }
+  .log .pote-line::before{ content:"ルナ： "; }
+  .log .sys-line{ color:#9a8a78; font-size:11.5px; }
+  .controls{
+    margin-top:12px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .row{ display:flex; gap:6px; }
+  input[type=text], select{
+    flex:1;
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-size:13.5px;
+    padding:8px 10px;
+    border-radius:8px;
+    border:2px solid var(--line);
+    background:#fffaf3;
+    color:var(--ink);
+    min-width:0;
+  }
+  select{ flex:0 0 90px; }
+  button{
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:700;
+    font-size:13px;
+    padding:8px 12px;
+    border-radius:8px;
+    border:none;
+    cursor:pointer;
+    color:#fff;
+    background:var(--accent);
+    transition:transform .1s ease;
+    white-space:nowrap;
+  }
+  button:active{ transform:scale(.96); }
+  button.secondary{ background:#b78a5e; }
+  button.ghost{
+    background:transparent;
+    color:#7a5c3e;
+    border:2px solid #7a5c3e;
+    font-size:11px;
+    padding:5px 8px;
+  }
+  .bottom-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:10px;
+    gap:6px;
+  }
+  .vocab-count{
+    font-family:'DotGothic16', monospace;
+    font-size:11px;
+    color:#7a5c3e;
+  }
+  .save-row{ display:flex; gap:4px; }
+  #fileInput{ display:none; }
+  .toast{
+    position:fixed; bottom:20px; left:50%;
+    transform:translateX(-50%);
+    background:var(--ink); color:#fff6f2;
+    padding:6px 14px; border-radius:20px;
+    font-size:12px;
+    opacity:0; pointer-events:none;
+    transition:opacity .2s ease;
+    z-index:99;
+  }
+  .toast.show{ opacity:1; }
+</style>
+</head>
+<body>
+
+<div class="console">
+  <div class="console-top">
+    <div class="brand">POCKET LUNA — どこでもいっしょ試作</div>
+    <div class="day-pill" id="dayPill">1日目</div>
+  </div>
+
+  <div class="screen-wrap">
+    <div class="screen">
+      <div class="scanlines"></div>
+      <div class="stage">
+        <div class="zzz" id="zzz">Zzz</div>
+        <div class="portrait-wrap" id="portraitWrap">
+          <!-- 生成されたルナの立ち絵画像を組み込んでいます -->
+          <img id="imgIdle" class="show" src="watermarked_img_8280487000866335240.png" alt="ルナ（通常）">
+          <img id="imgTalk" src="watermarked_img_8280487000866335240.png" alt="ルナ（話す）" style="filter: brightness(1.05);">
+          <img id="imgHappy" src="watermarked_img_8280487000866335240.png" alt="ルナ（うれしい）" style="filter: saturate(1.2);">
+        </div>
+      </div>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <input type="text" id="talkInput" placeholder="ルナに話しかける…" maxlength="20">
+      <button id="talkBtn">はなす</button>
+    </div>
+    <div class="row">
+      <select id="wordCategory">
+        <option value="greeting">あいさつ</option>
+        <option value="food">たべもの</option>
+        <option value="name">なまえ</option>
+        <option value="feeling">きもち</option>
+        <option value="place">ばしょ</option>
+        <option value="verb">どうし</option>
+      </select>
+      <input type="text" id="wordInput" placeholder="おしえることば" maxlength="12">
+      <button id="teachBtn" class="secondary">おしえる</button>
+    </div>
+  </div>
+
+  <div class="bottom-row">
+    <span class="vocab-count" id="vocabCount">おぼえたことば：0こ</span>
+    <div class="save-row">
+      <button class="ghost" id="saveBtn">きろく保存</button>
+      <button class="ghost" id="loadBtn">よみこむ</button>
+      <input type="file" id="fileInput" accept=".json">
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const TEMPLATES = {
+    greeting: ["{w}にゃ！げんき？", "きょうも{w}のきぶんだにゃ", "{w}ってするとなんだかうれしいにゃ"],
+    food: ["{w}たべたいにゃあ…", "きょうのごはんは{w}がいいにゃ", "{w}のにおい、するきがするにゃ"],
+    name: ["{w}ってよぶとふりむいちゃうかもにゃ", "{w}、それがわたしのなまえ…？にゃ", "{w}というひびきがすきにゃ"],
+    feeling: ["なんだか{w}きぶんにゃ", "きょうはずっと{w}にゃ", "{w}ってきもち、わかるきがするにゃ"],
+    place: ["{w}にいってみたいにゃ", "{w}のことをかんがえてたにゃ", "きょうは{w}のゆめをみたにゃ"],
+    verb: ["いっしょに{w}するにゃ？", "{w}のれんしゅういちゅうにゃ！", "{w}のあと、ひとやすみにゃ"]
+  };
+
+  const IDLE_LINES = [
+    "……（なにかかんがえてるにゃ）",
+    "ふしぎなおとがきこえたきがするにゃ",
+    "きょうもげんきにゃ！",
+    "ことば、もっとおしえてほしいにゃ"
+  ];
+
+  let state = { day: 1, vocab: [], talkCount: 0 };
+
+  const $ = (id) => document.getElementById(id);
+  const log = $('log');
+  const dayPill = $('dayPill');
+  const vocabCount = $('vocabCount');
+
+  function setFace(type){
+    $('imgIdle').classList.toggle('show', type === 'idle');
+    $('imgTalk').classList.toggle('show', type === 'talk');
+    $('imgHappy').classList.toggle('show', type === 'happy');
+  }
+
+  function toast(msg){
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 1600);
+  }
+
+  function appendLog(text, cls){
+    const p = document.createElement('p');
+    if(cls) p.className = cls;
+    p.textContent = text;
+    log.appendChild(p);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function updateHeader(){
+    dayPill.textContent = `${state.day}日目`;
+    vocabCount.textContent = `おぼえたことば：${state.vocab.length}こ`;
+  }
+
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function handleTalk(){
+    const input = $('talkInput');
+    const text = input.value.trim();
+    if(!text) return;
+    appendLog(`あなた： ${text}`);
+    input.value = '';
+    state.talkCount++;
+
+    const matched = state.vocab.find(v => text.includes(v.word));
+    if(matched){
+      const bank = TEMPLATES[matched.category] || TEMPLATES.greeting;
+      appendLog(pick(bank).replace('{w}', matched.word), 'pote-line');
+      setFace('happy');
+    } else if(state.vocab.length > 0 && Math.random() < 0.7){
+      const chosen = pick(state.vocab);
+      const bank = TEMPLATES[chosen.category] || TEMPLATES.greeting;
+      appendLog(pick(bank).replace('{w}', chosen.word), 'pote-line');
+      setFace('talk');
+    } else {
+      appendLog(pick(IDLE_LINES), 'pote-line');
+      setFace('talk');
+    }
+    setTimeout(()=> setFace('idle'), 2000);
+  }
+
+  function handleTeach(){
+    const wordInput = $('wordInput');
+    const word = wordInput.value.trim();
+    const category = $('wordCategory').value;
+    if(!word) return;
+    if(state.vocab.some(v => v.word === word)){
+      toast('それはもうおぼえているよ！');
+      return;
+    }
+    state.vocab.push({word, category});
+    wordInput.value = '';
+    appendLog(`「${word}」をおしえた！`, 'sys-line');
+    appendLog(`${word}、おぼえたにゃ！`, 'pote-line');
+    updateHeader();
+    setFace('happy');
+    setTimeout(()=> setFace('idle'), 2000);
+  }
+
+  $('talkBtn').addEventListener('click', handleTalk);
+  $('talkInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') handleTalk(); });
+  $('teachBtn').addEventListener('click', handleTeach);
+  $('wordInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') handleTeach(); });
+
+  $('saveBtn').addEventListener('click', ()=>{
+    const blob = new Blob([JSON.stringify(state)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pocket-luna-day${state.day}.json`;
+    a.click();
+    toast('きろくを保存したよ');
+  });
+
+  $('loadBtn').addEventListener('click', ()=> $('fileInput').click());
+  $('fileInput').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try{
+        state = JSON.parse(reader.result);
+        log.innerHTML = '';
+        appendLog('きろくをよみこんだにゃ', 'sys-line');
+        updateHeader();
+        toast('よみこみ完了！');
+      }catch(err){
+        toast('ファイルがこわれていらっしゃる');
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  appendLog('ルナ「おそとからやってきたにゃ！ことばをたくさんおしえてね」', 'pote-line');
+  updateHeader();
+})();
+</script>
+</body>
+</html>
