@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ぽけっとネコ — おはなしアプリ</title>
+<title>ぽけっとネコ — おはなし＆おせわアプリ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -11,7 +11,7 @@
     --ink: #3a2a20;
     --crt-bg: #3d2b22;
     --crt-frame: #f3e3d3;
-    --screen: #e2e8ce; /* 少しグリーンがかったレトロ液晶風 */
+    --screen: #e2e8ce;
     --accent: #e88ea0;
     --accent-deep: #c96b81;
     --line: #5a4536;
@@ -30,7 +30,7 @@
   }
   .console {
     width: 100%;
-    max-width: 460px;
+    max-width: 480px;
     background: var(--crt-frame);
     border-radius: 22px;
     padding: 16px;
@@ -42,13 +42,13 @@
     justify-content: space-between;
     padding: 2px 8px 10px;
   }
-  .console-top .brand {
+  .brand {
     font-family: 'DotGothic16', monospace;
-    font-size: 12px;
+    font-size: 13px;
     letter-spacing: 1px;
     color: #8a6a4a;
   }
-  .console-top .day-pill {
+  .status-pill {
     font-family: 'DotGothic16', monospace;
     font-size: 12px;
     background: #6ba883;
@@ -83,20 +83,58 @@
     pointer-events: none;
     z-index: 10;
   }
+  /* お部屋（ステージ）の装飾 */
   .stage {
     position: relative;
-    height: 170px;
+    height: 180px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-end;
-    background: linear-gradient(to bottom, #d6e0c0 0%, #b8c99d 100%);
+    background: #e4d5b7; /* 壁紙（昼） */
     overflow: hidden;
     padding-bottom: 10px;
-    border-bottom: 2px solid #9aa882;
+    border-bottom: 24px solid #c2a17a; /* 床（昼） */
+    transition: background 1s, border-bottom 1s;
   }
+  /* 夜のお部屋 */
+  .stage.night {
+    background: #4a5a6a;
+    border-bottom: 24px solid #3b4856;
+  }
+  /* 家具：窓 */
+  .window {
+    position: absolute; top: 20px; left: 20px;
+    width: 60px; height: 60px;
+    background: #87ceeb;
+    border: 4px solid #fff;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.1), 2px 2px 5px rgba(0,0,0,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px;
+    transition: background 1s;
+  }
+  .window::after {
+    content: ""; position: absolute;
+    width: 4px; height: 100%; background: #fff;
+  }
+  .window::before {
+    content: ""; position: absolute;
+    width: 100%; height: 4px; background: #fff; z-index: 1;
+  }
+  .stage.night .window { background: #191970; }
+  /* 家具：カレンダー */
+  .calendar {
+    position: absolute; top: 20px; right: 20px;
+    width: 44px; height: 50px;
+    background: #fff; border-radius: 4px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    display: flex; flex-direction: column;
+    text-align: center; overflow: hidden;
+  }
+  .cal-top { background: #c96b81; color: #fff; font-size: 11px; padding: 2px 0; font-weight: bold;}
+  .cal-day { font-size: 18px; font-weight: bold; color: #333; margin-top: 4px; font-family: 'Zen Maru Gothic', sans-serif;}
 
-  /* 白ネコのCSS描画（バラバラにならないように結合） */
+  /* キャラクター */
   .toro-wrap {
     position: relative;
     display: flex;
@@ -107,281 +145,160 @@
     animation: bob 3s ease-in-out infinite;
     z-index: 5;
   }
-  
   @keyframes bob {
     0%, 100% { transform: translateY(0) scale(1.4); }
     50% { transform: translateY(-3px) scale(1.4); }
   }
 
-  /* 頭のパーツ */
   .toro-head {
-    position: relative;
-    width: 60px; 
-    height: 44px;
-    background: #fff;
-    border: 2px solid #444;
-    border-radius: 10px 10px 18px 18px;
-    z-index: 3;
-    display: flex;
-    justify-content: center;
+    position: relative; width: 60px; height: 44px;
+    background: #fff; border: 2px solid #444;
+    border-radius: 10px 10px 18px 18px; z-index: 3;
+    display: flex; justify-content: center;
   }
   .toro-ear {
-    position: absolute;
-    width: 16px; 
-    height: 18px;
-    background: #fff;
-    border: 2px solid #444;
-    border-bottom: none;
-    top: -12px;
-    z-index: -1;
+    position: absolute; width: 16px; height: 18px;
+    background: #fff; border: 2px solid #444;
+    border-bottom: none; top: -12px; z-index: -1;
   }
-  .toro-ear.left {
-    left: 2px;
-    border-radius: 4px 12px 0 0;
-    transform: rotate(-15deg);
-  }
-  .toro-ear.right {
-    right: 2px;
-    border-radius: 12px 4px 0 0;
-    transform: rotate(15deg);
-  }
+  .toro-ear.left { left: 2px; border-radius: 4px 12px 0 0; transform: rotate(-15deg); }
+  .toro-ear.right { right: 2px; border-radius: 12px 4px 0 0; transform: rotate(15deg); }
+  
   .toro-eye {
-    position: absolute;
-    width: 5px; 
-    height: 5px;
-    background: #222;
-    border-radius: 50%;
-    top: 18px;
+    position: absolute; width: 5px; height: 5px;
+    background: #222; border-radius: 50%; top: 18px;
     transition: all 0.2s;
   }
   .toro-eye.left { left: 12px; }
   .toro-eye.right { right: 12px; }
   
   .toro-blush {
-    position: absolute;
-    width: 10px; height: 6px;
-    background: #ffa8b8;
-    border-radius: 50%;
-    top: 24px;
-    opacity: 0.6;
-    transition: all 0.2s;
+    position: absolute; width: 10px; height: 6px;
+    background: #ffa8b8; border-radius: 50%; top: 24px;
+    opacity: 0.6; transition: all 0.2s;
   }
   .toro-blush.left { left: 4px; }
   .toro-blush.right { right: 4px; }
 
   .toro-mouth {
-    position: absolute;
-    width: 14px; 
-    height: 6px;
-    border: 2px solid #222;
-    border-top: 1px solid #222;
-    border-radius: 2px 2px 10px 10px;
-    background: #fff;
-    top: 24px;
+    position: absolute; width: 14px; height: 6px;
+    border: 2px solid #222; border-top: 1px solid #222;
+    border-radius: 2px 2px 10px 10px; background: #fff; top: 24px;
     transition: all 0.2s;
   }
 
-  /* 体のパーツ（しっかり隙間なく繋げる） */
   .toro-body-container {
-    position: relative;
-    width: 24px;
-    display: flex;
-    justify-content: center;
-    margin-top: -4px; /* 頭と体を密着させる */
-    z-index: 2;
+    position: relative; width: 24px; display: flex;
+    justify-content: center; margin-top: -4px; z-index: 2;
   }
   .toro-torso {
-    width: 20px; 
-    height: 30px;
-    background: #fff;
-    border: 2px solid #444;
-    border-radius: 8px;
-    z-index: 2;
+    width: 20px; height: 30px; background: #fff;
+    border: 2px solid #444; border-radius: 8px; z-index: 2;
   }
   .toro-arm {
-    position: absolute;
-    width: 8px; 
-    height: 22px;
-    background: #fff;
-    border: 2px solid #444;
-    border-radius: 4px;
-    top: 4px;
-    z-index: 3;
+    position: absolute; width: 8px; height: 22px;
+    background: #fff; border: 2px solid #444;
+    border-radius: 4px; top: 4px; z-index: 3;
     transition: transform 0.3s;
   }
-  .toro-arm.left { 
-    left: -4px; 
-    transform: rotate(20deg); 
-    transform-origin: top center; 
-  }
-  .toro-arm.right { 
-    right: -4px; 
-    transform: rotate(-20deg); 
-    transform-origin: top center; 
-  }
+  .toro-arm.left { left: -4px; transform: rotate(20deg); transform-origin: top center; }
+  .toro-arm.right { right: -4px; transform: rotate(-20deg); transform-origin: top center; }
 
   .toro-leg {
-    position: absolute;
-    width: 8px; 
-    height: 18px;
-    background: #fff;
-    border: 2px solid #444;
-    border-top: none;
-    border-radius: 0 0 4px 4px;
-    bottom: -16px;
-    z-index: 1;
+    position: absolute; width: 8px; height: 18px;
+    background: #fff; border: 2px solid #444;
+    border-top: none; border-radius: 0 0 4px 4px;
+    bottom: -16px; z-index: 1;
   }
   .toro-leg.left { left: 2px; }
   .toro-leg.right { right: 2px; }
 
   .toro-tail {
-    position: absolute;
-    width: 26px; 
-    height: 6px;
-    background: #fff;
-    border: 2px solid #444;
-    border-radius: 3px;
-    bottom: 6px;
-    right: -16px;
-    transform: rotate(-30deg);
-    z-index: 0;
+    position: absolute; width: 26px; height: 6px;
+    background: #fff; border: 2px solid #444;
+    border-radius: 3px; bottom: 6px; right: -16px;
+    transform: rotate(-30deg); z-index: 0;
   }
 
-  /* ==================================
-     表情・ポーズのアニメーション設定
-  ================================== */
-  
-  /* しゃべる (talk) - 口がパクパク */
+  /* アニメーション */
   .toro-wrap.talk .toro-mouth {
-    height: 10px;
-    background: #f4b8c3;
-    border-radius: 4px 4px 12px 12px;
+    height: 10px; background: #f4b8c3; border-radius: 4px 4px 12px 12px;
     animation: talk-mouth 0.3s infinite alternate;
   }
-  @keyframes talk-mouth {
-    0% { height: 4px; }
-    100% { height: 10px; }
-  }
+  @keyframes talk-mouth { 0% { height: 4px; } 100% { height: 10px; } }
 
-  /* うれしい (happy) - 目が ^ ^ になり、バンザイする */
   .toro-wrap.happy .toro-eye {
-    background: transparent;
-    border: 2px solid #222;
-    border-bottom: none;
-    border-radius: 5px 5px 0 0;
-    width: 8px; 
-    height: 4px;
-    top: 18px;
+    background: transparent; border: 2px solid #222;
+    border-bottom: none; border-radius: 5px 5px 0 0;
+    width: 8px; height: 4px; top: 18px;
   }
   .toro-wrap.happy .toro-eye.left { left: 10px; }
   .toro-wrap.happy .toro-eye.right { right: 10px; }
-  .toro-wrap.happy .toro-blush {
-    opacity: 1;
-    background: #ff7b95;
-  }
-  .toro-wrap.happy .toro-mouth {
-    height: 12px;
-    background: #f4b8c3;
-    border-radius: 4px 4px 14px 14px;
-  }
-  .toro-wrap.happy .toro-arm.left {
-    transform: rotate(140deg); /* バンザイ */
-  }
-  .toro-wrap.happy .toro-arm.right {
-    transform: rotate(-140deg); /* バンザイ */
-  }
-  .toro-wrap.happy {
-    animation: jump 0.4s ease-in-out infinite alternate;
-  }
-  @keyframes jump {
-    0% { transform: translateY(0) scale(1.4); }
-    100% { transform: translateY(-10px) scale(1.4); }
+  .toro-wrap.happy .toro-blush { opacity: 1; background: #ff7b95; }
+  .toro-wrap.happy .toro-mouth { height: 12px; background: #f4b8c3; border-radius: 4px 4px 14px 14px; }
+  .toro-wrap.happy .toro-arm.left { transform: rotate(140deg); }
+  .toro-wrap.happy .toro-arm.right { transform: rotate(-140deg); }
+  .toro-wrap.happy { animation: jump 0.4s ease-in-out infinite alternate; }
+  @keyframes jump { 0% { transform: translateY(0) scale(1.4); } 100% { transform: translateY(-10px) scale(1.4); } }
+
+  /* 睡眠アニメーション */
+  .toro-wrap.sleep .toro-eye { height: 2px; background: #222; border-radius: 0; top: 22px; }
+  .toro-wrap.sleep .toro-mouth { height: 4px; width: 4px; border-radius: 50%; top: 26px; left: 28px; }
+  .toro-wrap.sleep .toro-arm.left { transform: rotate(5deg); }
+  .toro-wrap.sleep .toro-arm.right { transform: rotate(-5deg); }
+  .toro-wrap.sleep { animation: breathe 3s ease-in-out infinite; }
+  @keyframes breathe {
+    0%, 100% { transform: translateY(0) scale(1.4); }
+    50% { transform: translateY(2px) scale(1.4) scaleY(0.98); }
   }
 
+  .zzz {
+    position: absolute; top: 15px; right: 35%;
+    font-family: 'DotGothic16', monospace;
+    font-size: 16px; color: #555; opacity: 0; z-index: 3;
+    pointer-events: none;
+  }
+  .stage.night .zzz { color: #fff; }
+  .zzz.show { opacity: 1; animation: floatUp 3s infinite; }
+  @keyframes floatUp { 0% { opacity:0; transform: translateY(10px); } 50% { opacity:1; } 100% { opacity:0; transform: translateY(-10px); } }
 
-  /* ログ（会話履歴）エリア */
   .log {
-    position: relative;
-    z-index: 5;
-    height: 110px;
-    overflow-y: auto;
-    padding: 10px 12px;
-    font-size: 13px;
-    line-height: 1.6;
-    background: rgba(255, 255, 255, 0.6);
+    position: relative; z-index: 5; height: 110px; overflow-y: auto;
+    padding: 10px 12px; font-size: 13px; line-height: 1.6;
+    background: rgba(255, 255, 255, 0.7);
   }
   .log::-webkit-scrollbar { width: 6px; }
   .log::-webkit-scrollbar-thumb { background: #b8c99d; border-radius: 4px; }
   .log p { margin: 0 0 6px; }
   .log .pote-line { color: #2c4c3b; font-weight: 700; }
-  .log .pote-line::before { content: "ネコ： "; }
   .log .sys-line { color: #666; font-size: 11.5px; }
 
-  /* コントローラー */
-  .controls {
-    margin-top: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
+  .controls { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
   .row { display: flex; gap: 6px; }
   input[type=text], select {
-    flex: 1;
-    font-family: 'Zen Maru Gothic', sans-serif;
-    font-size: 13.5px;
-    padding: 8px 10px;
-    border-radius: 8px;
-    border: 2px solid var(--line);
-    background: #fffaf3;
-    color: var(--ink);
-    min-width: 0;
+    flex: 1; font-family: 'Zen Maru Gothic', sans-serif; font-size: 13.5px;
+    padding: 8px 10px; border-radius: 8px; border: 2px solid var(--line);
+    background: #fffaf3; color: var(--ink); min-width: 0;
   }
   select { flex: 0 0 90px; }
   button {
-    font-family: 'Zen Maru Gothic', sans-serif;
-    font-weight: 700;
-    font-size: 13px;
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    color: #fff;
-    background: #6ba883;
-    transition: transform .1s ease;
-    white-space: nowrap;
+    font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 13px;
+    padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer;
+    color: #fff; background: #6ba883; transition: transform .1s ease; white-space: nowrap;
   }
   button:active { transform: scale(.96); }
-  button.secondary { background: #b78a5e; }
-  button.ghost {
-    background: transparent;
-    color: #7a5c3e;
-    border: 2px solid #7a5c3e;
-    font-size: 11px;
-    padding: 5px 8px;
-  }
-  .bottom-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 10px;
-    gap: 6px;
-  }
-  .vocab-count {
-    font-family: 'DotGothic16', monospace;
-    font-size: 11px;
-    color: #7a5c3e;
-  }
+  button:disabled { background: #ccc; cursor: not-allowed; }
+  button.action { background: #e88ea0; }
+  button.ghost { background: transparent; color: #7a5c3e; border: 2px solid #7a5c3e; font-size: 11px; padding: 5px 8px; }
+  
+  .bottom-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; gap: 6px; }
+  .vocab-count { font-family: 'DotGothic16', monospace; font-size: 11px; color: #7a5c3e; }
   .save-row { display: flex; gap: 4px; }
   #fileInput { display: none; }
   .toast {
-    position: fixed; bottom: 20px; left: 50%;
-    transform: translateX(-50%);
-    background: var(--ink); color: #fff6f2;
-    padding: 6px 14px; border-radius: 20px;
-    font-size: 12px;
-    opacity: 0; pointer-events: none;
-    transition: opacity .2s ease;
-    z-index: 99;
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: #fff6f2; padding: 6px 14px; border-radius: 20px;
+    font-size: 12px; opacity: 0; pointer-events: none; transition: opacity .2s ease; z-index: 99;
   }
   .toast.show { opacity: 1; }
 </style>
@@ -390,16 +307,21 @@
 
 <div class="console">
   <div class="console-top">
-    <div class="brand">POCKET CAT — おはなしアプリ</div>
-    <div class="day-pill" id="dayPill">1日目</div>
+    <div class="brand">POCKET NEKO</div>
+    <div class="status-pill" id="clockPill">--:--</div>
   </div>
 
   <div class="screen-wrap">
     <div class="screen">
       <div class="scanlines"></div>
-      <div class="stage">
+      <div class="stage" id="stage">
+        <div class="window" id="window">🌸</div>
+        <div class="calendar">
+          <div class="cal-top" id="calMonth">--</div>
+          <div class="cal-day" id="calDay">--</div>
+        </div>
+        <div class="zzz" id="zzz">Zzz...</div>
         
-        <!-- 白ネコのCSS描画 -->
         <div class="toro-wrap idle" id="catWrap">
           <div class="toro-head">
             <div class="toro-ear left"></div>
@@ -419,7 +341,6 @@
             <div class="toro-tail"></div>
           </div>
         </div>
-
       </div>
       <div class="log" id="log"></div>
     </div>
@@ -427,8 +348,9 @@
 
   <div class="controls">
     <div class="row">
-      <input type="text" id="talkInput" placeholder="ネコに話しかける…" maxlength="20">
+      <input type="text" id="talkInput" placeholder="話しかける…" maxlength="20">
       <button id="talkBtn">はなす</button>
+      <button id="feedBtn" class="action">ごはん</button>
     </div>
     <div class="row">
       <select id="wordCategory">
@@ -440,15 +362,17 @@
         <option value="verb">どうし</option>
       </select>
       <input type="text" id="wordInput" placeholder="教えることば" maxlength="12">
-      <button id="teachBtn" class="secondary">おしえる</button>
+      <button id="teachBtn">おしえる</button>
     </div>
   </div>
 
   <div class="bottom-row">
-    <span class="vocab-count" id="vocabCount">おぼえたことば：0こ</span>
+    <span class="vocab-count" id="vocabCount">言葉：0</span>
     <div class="save-row">
-      <button class="ghost" id="saveBtn">きろく保存</button>
-      <button class="ghost" id="loadBtn">よみこむ</button>
+      <button class="ghost" id="wakeBtn" style="display:none;">起こす</button>
+      <button class="ghost" id="nameBtn">名前変更</button>
+      <button class="ghost" id="saveBtn">セーブ</button>
+      <button class="ghost" id="loadBtn">ロード</button>
       <input type="file" id="fileInput" accept=".json">
     </div>
   </div>
@@ -463,26 +387,37 @@
     food: ["{w}たべたいニャあ…", "きょうのごはんは{w}にするニャ", "{w}、おいしいニャよね"],
     name: ["{w}ってよんでほしいニャ", "{w}さん…？ニャ", "{w}というひびきがすきニャ"],
     feeling: ["なんだか{w}気分ニャ", "きょうはずっと{w}ニャ", "{w}ってきもち、わかるニャ"],
-    place: ["{w}にいってみたいニャ", "{w}のことをかんがえてたニャ", "きょうは{w}のゆめをみたニャ"],
+    place: ["{w}にいってみたいニャ", "{w}のことをかんがえてたニャ", "いつか{w}にいけるかニャ？"],
     verb: ["いっしょに{w}するニャ？", "{w}のれんしゅう中ニャ！", "{w}のあと、ひとやすみニャ"]
   };
 
   const IDLE_LINES = [
     "……（なにか考えてるニャ）",
     "言葉、もっと教えてほしいニャ",
-    "きょうも元気ニャ！",
+    "外のけしきを見るのがすきニャ",
     "人間ってふしぎニャ〜"
   ];
 
-  let state = { day: 1, vocab: [], talkCount: 0 };
+  // ★初期データ（最初から少し言葉を知っています）
+  let state = {
+    catName: "ネコ",
+    vocab: [
+      {word: "おそば", category: "food"},
+      {word: "阿佐ヶ谷", category: "place"},
+      {word: "中央線", category: "place"}
+    ],
+    talkCount: 0
+  };
+
+  let isAsleep = false;
+  let isForcedWake = false; // 夜だけど手動で起こしたフラグ
 
   const $ = (id) => document.getElementById(id);
   const log = $('log');
-  const dayPill = $('dayPill');
-  const vocabCount = $('vocabCount');
   const catWrap = $('catWrap');
 
   function setFace(type){
+    if (isAsleep && type !== 'sleep') return; // 寝ている時は表情を変えない
     catWrap.className = `toro-wrap ${type}`;
   }
 
@@ -496,19 +431,75 @@
   function appendLog(text, cls){
     const p = document.createElement('p');
     if(cls) p.className = cls;
-    p.textContent = text;
+    // 「ネコ：」の部分を変数に置き換え
+    if (cls === 'pote-line') {
+      p.textContent = `${state.catName}： ${text}`;
+    } else {
+      p.textContent = text;
+    }
     log.appendChild(p);
     log.scrollTop = log.scrollHeight;
   }
 
   function updateHeader(){
-    dayPill.textContent = `${state.day}日目`;
-    vocabCount.textContent = `おぼえたことば：${state.vocab.length}こ`;
+    $('vocabCount').textContent = `おぼえた言葉：${state.vocab.length}こ`;
   }
 
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
+  // 時間・季節の更新システム
+  function updateTime() {
+    const d = new Date();
+    const h = d.getHours();
+    const m = d.getMinutes();
+    const month = d.getMonth() + 1;
+    
+    // 時計とカレンダー更新
+    $('clockPill').textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    $('calMonth').textContent = `${month}月`;
+    $('calDay').textContent = d.getDate();
+
+    // 季節判定
+    let seasonIcon = "🌸"; // 春(3-5)
+    if(month >= 6 && month <= 8) seasonIcon = "🌻"; // 夏
+    else if(month >= 9 && month <= 11) seasonIcon = "🍁"; // 秋
+    else if(month === 12 || month <= 2) seasonIcon = "⛄️"; // 冬
+    
+    // 夜判定（22時〜翌6時）
+    const isNightTime = (h >= 22 || h < 6);
+    
+    if (isNightTime) {
+      $('stage').classList.add('night');
+      $('window').textContent = "🌙";
+    } else {
+      $('stage').classList.remove('night');
+      $('window').textContent = seasonIcon;
+      isForcedWake = false; // 朝になったらリセット
+    }
+
+    // 睡眠ステータス管理
+    if (isNightTime && !isForcedWake) {
+      isAsleep = true;
+      setFace('sleep');
+      $('zzz').classList.add('show');
+      $('wakeBtn').style.display = 'inline-block';
+      $('talkBtn').disabled = true;
+      $('teachBtn').disabled = true;
+      $('feedBtn').disabled = true;
+    } else {
+      isAsleep = false;
+      $('zzz').classList.remove('show');
+      $('wakeBtn').style.display = 'none';
+      $('talkBtn').disabled = false;
+      $('teachBtn').disabled = false;
+      $('feedBtn').disabled = false;
+      if(catWrap.className.includes('sleep')) setFace('idle');
+    }
+  }
+
+  // アクション：話す
   function handleTalk(){
+    if(isAsleep) return;
     const input = $('talkInput');
     const text = input.value.trim();
     if(!text) return;
@@ -530,12 +521,12 @@
       appendLog(pick(IDLE_LINES), 'pote-line');
       setFace('talk');
     }
-    
-    // アニメーションを数秒で元に戻す
     setTimeout(() => setFace('idle'), 2500);
   }
 
+  // アクション：教える
   function handleTeach(){
+    if(isAsleep) return;
     const wordInput = $('wordInput');
     const word = wordInput.value.trim();
     const category = $('wordCategory').value;
@@ -550,21 +541,65 @@
     appendLog(`${word}、おぼえたニャ！`, 'pote-line');
     updateHeader();
     setFace('happy');
-    
     setTimeout(() => setFace('idle'), 2500);
   }
 
+  // アクション：ごはん
+  function handleFeed(){
+    if(isAsleep) return;
+    const foodLines = ["もぐもぐ…おいしいニャ！", "おなかいっぱいニャ〜", "ごちそうさまニャ！"];
+    // 食べ物カテゴリーの言葉を知っていればランダムで言う
+    const foods = state.vocab.filter(v => v.category === 'food');
+    if (foods.length > 0 && Math.random() > 0.4) {
+      const f = pick(foods).word;
+      foodLines.push(`${f}はさいこうニャ！`);
+      foodLines.push(`${f}をたべると元気がでるニャ`);
+    }
+    appendLog(`ごはんをあげた。`, 'sys-line');
+    appendLog(pick(foodLines), 'pote-line');
+    setFace('happy');
+    setTimeout(() => setFace('idle'), 2500);
+  }
+
+  // アクション：起こす
+  function handleWake(){
+    isForcedWake = true;
+    updateTime();
+    appendLog(`ふぁ〜あ… ねむいニャ…`, 'pote-line');
+    setFace('talk');
+    setTimeout(() => setFace('idle'), 2500);
+  }
+
+  // アクション：名前変更
+  function handleNameChange(){
+    const newName = prompt("新しい名前を教えてニャ", state.catName);
+    if(newName && newName.trim() !== "") {
+      state.catName = newName.trim();
+      updateHeader();
+      appendLog(`${state.catName}になったニャ！よろしくニャ！`, 'pote-line');
+      if(!isAsleep) {
+        setFace('happy');
+        setTimeout(() => setFace('idle'), 2500);
+      }
+    }
+  }
+
+  // イベントリスナー登録
   $('talkBtn').addEventListener('click', handleTalk);
   $('talkInput').addEventListener('keydown', (e) => { if(e.key==='Enter') handleTalk(); });
   $('teachBtn').addEventListener('click', handleTeach);
   $('wordInput').addEventListener('keydown', (e) => { if(e.key==='Enter') handleTeach(); });
+  $('feedBtn').addEventListener('click', handleFeed);
+  $('wakeBtn').addEventListener('click', handleWake);
+  $('nameBtn').addEventListener('click', handleNameChange);
 
+  // セーブ・ロード
   $('saveBtn').addEventListener('click', ()=>{
     const blob = new Blob([JSON.stringify(state)], {type:'application/json'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `pocket-cat-day${state.day}.json`;
+    a.download = `pocket-cat-save.json`;
     a.click();
     toast('きろくを保存したよ');
   });
@@ -575,20 +610,24 @@
     if(!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      try{
+      try {
         state = JSON.parse(reader.result);
+        if(!state.catName) state.catName = "ネコ"; // 互換性対応
         log.innerHTML = '';
         appendLog('きろくをよみこんだニャ', 'sys-line');
         updateHeader();
         toast('よみこみ完了！');
-      }catch(err){
+      } catch(err) {
         toast('ファイルが壊れているみたい…');
       }
     };
     reader.readAsText(file);
   });
 
-  appendLog('ネコ「言葉をたくさん教えてほしいニャ」', 'pote-line');
+  // 初期化
+  updateTime();
+  setInterval(updateTime, 60000); // 1分ごとに時間を更新
+  appendLog('お部屋にやってきたニャ！よろしくニャ！', 'pote-line');
   updateHeader();
 })();
 </script>
