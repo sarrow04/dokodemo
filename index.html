@@ -83,6 +83,7 @@
     pointer-events: none;
     z-index: 10;
   }
+
   /* お部屋（ステージ）の装飾 */
   .stage {
     position: relative;
@@ -122,6 +123,7 @@
     width: 100%; height: 4px; background: #fff; z-index: 1;
   }
   .stage.night .window { background: #191970; }
+  
   /* 家具：カレンダー */
   .calendar {
     position: absolute; top: 20px; right: 20px;
@@ -134,7 +136,7 @@
   .cal-top { background: #c96b81; color: #fff; font-size: 11px; padding: 2px 0; font-weight: bold;}
   .cal-day { font-size: 18px; font-weight: bold; color: #333; margin-top: 4px; font-family: 'Zen Maru Gothic', sans-serif;}
 
-  /* キャラクター */
+  /* 白ネコのCSS描画（隙間なく結合） */
   .toro-wrap {
     position: relative;
     display: flex;
@@ -220,7 +222,7 @@
     transform: rotate(-30deg); z-index: 0;
   }
 
-  /* アニメーション */
+  /* 表情・ポーズアニメーション */
   .toro-wrap.talk .toro-mouth {
     height: 10px; background: #f4b8c3; border-radius: 4px 4px 12px 12px;
     animation: talk-mouth 0.3s infinite alternate;
@@ -262,6 +264,7 @@
   .zzz.show { opacity: 1; animation: floatUp 3s infinite; }
   @keyframes floatUp { 0% { opacity:0; transform: translateY(10px); } 50% { opacity:1; } 100% { opacity:0; transform: translateY(-10px); } }
 
+  /* ログ（会話履歴） */
   .log {
     position: relative; z-index: 5; height: 110px; overflow-y: auto;
     padding: 10px 12px; font-size: 13px; line-height: 1.6;
@@ -273,6 +276,7 @@
   .log .pote-line { color: #2c4c3b; font-weight: 700; }
   .log .sys-line { color: #666; font-size: 11.5px; }
 
+  /* コントローラー */
   .controls { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
   .row { display: flex; gap: 6px; }
   input[type=text], select {
@@ -294,7 +298,7 @@
   .bottom-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; gap: 6px; }
   .vocab-count { font-family: 'DotGothic16', monospace; font-size: 11px; color: #7a5c3e; }
   .save-row { display: flex; gap: 4px; }
-  #fileInput { display: none; }
+  
   .toast {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
     background: var(--ink); color: #fff6f2; padding: 6px 14px; border-radius: 20px;
@@ -370,10 +374,9 @@
     <span class="vocab-count" id="vocabCount">言葉：0</span>
     <div class="save-row">
       <button class="ghost" id="wakeBtn" style="display:none;">起こす</button>
-      <button class="ghost" id="nameBtn">名前変更</button>
+      <button class="ghost" id="nameBtn">名前</button>
       <button class="ghost" id="saveBtn">セーブ</button>
       <button class="ghost" id="loadBtn">ロード</button>
-      <input type="file" id="fileInput" accept=".json">
     </div>
   </div>
 </div>
@@ -382,6 +385,9 @@
 
 <script>
 (function(){
+  // ★GAS ウェブアプリのURL
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbyrEN_3encN9B44b843ly0CRdYf9orByiujChXU0iWlxXJtrWukNhtFU8nMsPx7PiuT/exec";
+
   const TEMPLATES = {
     greeting: ["{w}ニャ！", "きょうは{w}の気分ニャ", "{w}っていい言葉ニャ"],
     food: ["{w}たべたいニャあ…", "きょうのごはんは{w}にするニャ", "{w}、おいしいニャよね"],
@@ -398,7 +404,6 @@
     "人間ってふしぎニャ〜"
   ];
 
-  // ★初期データ（最初から少し言葉を知っています）
   let state = {
     catName: "ネコ",
     vocab: [
@@ -406,18 +411,19 @@
       {word: "阿佐ヶ谷", category: "place"},
       {word: "中央線", category: "place"}
     ],
-    talkCount: 0
+    talkCount: 0,
+    day: 1
   };
 
   let isAsleep = false;
-  let isForcedWake = false; // 夜だけど手動で起こしたフラグ
+  let isForcedWake = false; 
 
   const $ = (id) => document.getElementById(id);
   const log = $('log');
   const catWrap = $('catWrap');
 
   function setFace(type){
-    if (isAsleep && type !== 'sleep') return; // 寝ている時は表情を変えない
+    if (isAsleep && type !== 'sleep') return; 
     catWrap.className = `toro-wrap ${type}`;
   }
 
@@ -431,7 +437,6 @@
   function appendLog(text, cls){
     const p = document.createElement('p');
     if(cls) p.className = cls;
-    // 「ネコ：」の部分を変数に置き換え
     if (cls === 'pote-line') {
       p.textContent = `${state.catName}： ${text}`;
     } else {
@@ -447,25 +452,22 @@
 
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
-  // 時間・季節の更新システム
+  // 時間・季節の更新
   function updateTime() {
     const d = new Date();
     const h = d.getHours();
     const m = d.getMinutes();
     const month = d.getMonth() + 1;
     
-    // 時計とカレンダー更新
     $('clockPill').textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
     $('calMonth').textContent = `${month}月`;
     $('calDay').textContent = d.getDate();
 
-    // 季節判定
-    let seasonIcon = "🌸"; // 春(3-5)
-    if(month >= 6 && month <= 8) seasonIcon = "🌻"; // 夏
-    else if(month >= 9 && month <= 11) seasonIcon = "🍁"; // 秋
-    else if(month === 12 || month <= 2) seasonIcon = "⛄️"; // 冬
+    let seasonIcon = "🌸"; 
+    if(month >= 6 && month <= 8) seasonIcon = "🌻"; 
+    else if(month >= 9 && month <= 11) seasonIcon = "🍁"; 
+    else if(month === 12 || month <= 2) seasonIcon = "⛄️"; 
     
-    // 夜判定（22時〜翌6時）
     const isNightTime = (h >= 22 || h < 6);
     
     if (isNightTime) {
@@ -474,10 +476,9 @@
     } else {
       $('stage').classList.remove('night');
       $('window').textContent = seasonIcon;
-      isForcedWake = false; // 朝になったらリセット
+      isForcedWake = false; 
     }
 
-    // 睡眠ステータス管理
     if (isNightTime && !isForcedWake) {
       isAsleep = true;
       setFace('sleep');
@@ -548,7 +549,6 @@
   function handleFeed(){
     if(isAsleep) return;
     const foodLines = ["もぐもぐ…おいしいニャ！", "おなかいっぱいニャ〜", "ごちそうさまニャ！"];
-    // 食べ物カテゴリーの言葉を知っていればランダムで言う
     const foods = state.vocab.filter(v => v.category === 'food');
     if (foods.length > 0 && Math.random() > 0.4) {
       const f = pick(foods).word;
@@ -593,35 +593,44 @@
   $('wakeBtn').addEventListener('click', handleWake);
   $('nameBtn').addEventListener('click', handleNameChange);
 
-  // セーブ・ロード
-  $('saveBtn').addEventListener('click', ()=>{
-    const blob = new Blob([JSON.stringify(state)], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `pocket-cat-save.json`;
-    a.click();
-    toast('きろくを保存したよ');
+  // ★クラウドセーブ（GASへPOST）
+  $('saveBtn').addEventListener('click', async () => {
+    $('saveBtn').textContent = "保存中...";
+    $('saveBtn').disabled = true;
+    try {
+      await fetch(GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify(state)
+      });
+      toast('クラウドに記録したニャ！');
+    } catch(err) {
+      toast('通信エラーだニャ…');
+    }
+    $('saveBtn').textContent = "セーブ";
+    $('saveBtn').disabled = false;
   });
 
-  $('loadBtn').addEventListener('click', () => $('fileInput').click());
-  $('fileInput').addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        state = JSON.parse(reader.result);
-        if(!state.catName) state.catName = "ネコ"; // 互換性対応
+  // ★クラウドロード（GASからGET）
+  $('loadBtn').addEventListener('click', async () => {
+    $('loadBtn').textContent = "読込中...";
+    $('loadBtn').disabled = true;
+    try {
+      const response = await fetch(GAS_URL);
+      const data = await response.json();
+      
+      if(data && data.catName) {
+        state = data;
         log.innerHTML = '';
-        appendLog('きろくをよみこんだニャ', 'sys-line');
+        appendLog('クラウドから帰ってきたニャ！', 'sys-line');
         updateHeader();
+        updateTime(); 
         toast('よみこみ完了！');
-      } catch(err) {
-        toast('ファイルが壊れているみたい…');
       }
-    };
-    reader.readAsText(file);
+    } catch(err) {
+      toast('通信エラーだニャ…');
+    }
+    $('loadBtn').textContent = "ロード";
+    $('loadBtn').disabled = false;
   });
 
   // 初期化
